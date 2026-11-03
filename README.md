@@ -1,6 +1,6 @@
 # MP3 Tag Reader
 
-A command-line tool written in C that reads and edits ID3 metadata in MP3 files.
+A CLA based tool written in C that reads and edits ID3 metadata in MP3 files.
 
 ## Usage
 
@@ -8,6 +8,7 @@ A command-line tool written in C that reads and edits ID3 metadata in MP3 files.
 ./mp3tag [command] audio_file.mp3
 ./mp3tag [command] "new_info" audio_file.mp3
 ```
+## Commands
 
 | Command | Action |
 |---------|--------|
