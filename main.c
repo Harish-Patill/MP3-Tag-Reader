@@ -18,65 +18,47 @@ void display_help(){
 }
 
 
-int main(int argc,char *argv[]){
+// Print the detected ID3 version of a file
+static void print_tag_version(const char *filename){
+    int version = check_id3_tag_presence(filename);
 
-    // cla's validation
-    if(argc < 2) {              // minimum 3 cla's are required
+    switch(version){
+        case 1: printf("ID3v1.0 detected\n\n"); break;
+        case 2: printf("ID3v1.1 detected\n\n"); break;
+        case 3: printf("ID3v2.2 detected\n\n"); break;
+        case 4: printf("ID3v2.3 detected\n\n"); break;
+        case 5: printf("ID3v2.4 detected\n\n"); break;
+        default: printf("No supported ID3 tag found\n"); break;
+    }
+}
+
+int main(int argc,char *argv[]){
+    if(argc < 2){
         display_help();
         return 1;
     }
 
-    if(strcmp(argv[1], "-h") == 0){     // help display function as -h is passed
+    if(strcmp(argv[1],"-h")==0){
         display_help();
         return 0;
-    } 
-    else if(strcmp(argv[1], "-v") == 0 && argc == 3){       // mp3 files details will be displayed
-        view_tags(argv[2]);     // passing the songs name that need to be displayed
-    } 
-    else if(strcmp(argv[1], "-e") == 0 && argc == 5){
-        char *tag = argv[2];            // tag holds what to change
-        char *filename = argv[3];       // filename holds the songs name
-        char *value = argv[4];          // value holds the new value that will be replacing the value from the .mp3
+    }
 
-        if(edit_tag(filename, tag, value) != 0){        // if the editing fails, program is terminated here.
+    if(strcmp(argv[1],"-v")==0 && argc==3){
+        view_tags(argv[2]);
+        print_tag_version(argv[2]);
+        return 0;
+    }
+
+    if(strcmp(argv[1],"-e")==0 && argc==5){
+        // argv[2] = tag flag, argv[3] = file, argv[4] = new value
+        if(edit_tag(argv[3],argv[2],argv[4]) != 0){
             display_error("Failed to edit tag.");
             return 1;
         }
-        printf("Tag edited successfully.\n");           // if the editing succeds display tag is edited
-    }
-    else{           
-        display_help();
-        return 1;
-    }
-    
-    
-    int version = check_id3_tag_presence(argv[2]);  // this will find the tag from the argv[2], which is song name
-
-    switch (version){
-        case 1:
-            printf("ID3v1.0 detected\n\n");
-            break;
-
-        case 2:
-            printf("ID3v1.1 detected\n\n");
-            break;
-
-        case 3:
-            printf("ID3v2.2 detected\n\n");
-            break;
-
-        case 4:
-            printf("ID3v2.3 detected\n\n");
-            break;
-
-        case 5:
-            printf("ID3v2.4 detected\n\n");
-            break;
-
-        default:
-            printf("No supported ID3 tag found\n");
-            break;
+        printf("Tag edited successfully.\n");
+        return 0;
     }
 
-    return 0;
+    display_help();
+    return 1;
 }
