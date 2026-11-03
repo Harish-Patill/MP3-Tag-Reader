@@ -7,5 +7,5 @@ a.out
 venv/
 
 # # audio files and temp copies
-# *.mp3
-# *.tmp
+*.mp3
+*.tmp
