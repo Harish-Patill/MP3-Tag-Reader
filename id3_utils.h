@@ -2,6 +2,7 @@
 #define ID3_UTILS_H
 
 typedef struct {
+    char *track;   /**< Track number (ID3v1.1 only) */
     char *version; /* Version of the ID3 tag */
     char *artist;  /* Artist of the song */
     char *title;   /* Title of the song */
@@ -9,6 +10,7 @@ typedef struct {
     char *album;   /* Album name */
     char *comment; /* Comment */
     char *genre;   /* Genre */
+
 } TagData;
 
 TagData *create_tag_data(void);

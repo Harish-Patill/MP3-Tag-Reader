@@ -111,6 +111,14 @@ TagData* read_id3_tags(const char *filename){
         strlen(genre_id)
     );
 
+    // Track number exists only in ID3v1.1
+    char track_id[4] = "";
+
+    if (is_v11)
+        snprintf(track_id, sizeof(track_id), "%u", tag[126]);
+
+    data->track = copy_field((const unsigned char *)track_id, strlen(track_id));
+
     // Check memory allocation
     if (data->version   == NULL ||
         data->title     == NULL ||
@@ -118,7 +126,8 @@ TagData* read_id3_tags(const char *filename){
         data->album     == NULL ||
         data->year      == NULL ||
         data->comment   == NULL ||
-        data->genre     == NULL){
+        data->genre     == NULL ||
+        data->track     == NULL){
 
         display_error("Memory allocation failed.");
         free_tag_data(data);
@@ -145,6 +154,7 @@ void display_metadata(const TagData *data){
     printf("Year    : %s\n", data->year);
     printf("Comment : %s\n", data->comment);
     printf("Genre ID: %s\n", data->genre);
+    printf("Track   : %s\n", data->track);
 
     printf("----------------------------------------------\n");
 }

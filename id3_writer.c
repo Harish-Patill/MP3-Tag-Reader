@@ -34,6 +34,18 @@ static int update_field(char **field, const char *value){
     return 0;
 }
 
+// Parse a numeric string (0-255) into one byte
+static int parse_byte(const char *text, unsigned char *out){
+    char *end;
+    long value = strtol(text, &end, 10);
+
+    if (*end != '\0' || value < 0 || value > 255)
+        return 1;
+
+    *out = (unsigned char)value;
+    return 0;
+}
+
 // Write ID3v1 metadata into an MP3 file
 int write_id3_tags(const char *filename, const TagData *data){
     if (filename == NULL || data == NULL){
@@ -73,25 +85,36 @@ int write_id3_tags(const char *filename, const TagData *data){
     copy_to_tag(tag + 33, data->artist, 30);
     copy_to_tag(tag + 63, data->album, 30);
     copy_to_tag(tag + 93, data->year, 4);
-    copy_to_tag(tag + 97, data->comment, 30);
 
-    // Genre ID (numeric string)
-    int genre = 255;
+    // Use the ID3v1.1 layout (28-byte comment + track) when a track is set
+    int has_track = (data->track != NULL && data->track[0] != '\0');
 
-    if(data->genre != NULL && data->genre[0] != '\0'){
-        char *end;
-        long value = strtol(data->genre, &end, 10);
+    copy_to_tag(tag + 97, data->comment, has_track ? 28 : 30);
 
-        if (*end == '\0' && value >= 0 && value <= 255) genre = (int)value;
-           
-        else{
+    if (has_track){
+        unsigned char track;
+
+        if (parse_byte(data->track, &track) != 0){
+            display_error("Track must be a number from 0 to 255.");
+            fclose(fp);
+            return 1;
+        }
+
+        tag[126] = track;     // byte 125 stays 0 as the separator
+    }
+
+    // Genre defaults to 255 (unknown) when not set
+    unsigned char genre = 255;
+
+    if (data->genre != NULL && data->genre[0] != '\0'){
+        if (parse_byte(data->genre, &genre) != 0){
             display_error("Genre must be a numeric ID from 0 to 255.");
             fclose(fp);
             return 1;
         }
     }
 
-    tag[127] = (unsigned char)genre;
+    tag[127] = genre;
 
     // Check whether an ID3v1 tag already exists
     int existing_tag = 0;
@@ -159,7 +182,7 @@ int edit_tag(const char *filename, const char *tag, const char *value){
     int result = 0;
 
     // Select the metadata field
-    if(strcmp(tag, "-t") == 0){         // updating tile
+    if(strcmp(tag, "-t") == 0){         // updating title
         result = update_field(&data->title, value);
     }
     else if(strcmp(tag, "-a") == 0){    // updating artist
@@ -177,10 +200,8 @@ int edit_tag(const char *filename, const char *tag, const char *value){
     else if(strcmp(tag, "-g") == 0){    // updating genre
         result = update_field(&data->genre, value);
     }
-    else if(strcmp(tag, "-T") == 0){    // track editing
-        display_error("Track editing is not supported by the current TagData structure.");
-        free_tag_data(data);
-        return 1;
+    else if(strcmp(tag, "-T") == 0){    // updating track
+        result = update_field(&data->track, value);
     }
     else{       // invalid tag option
         display_error("Invalid tag option.");
