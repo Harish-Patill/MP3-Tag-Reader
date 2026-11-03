@@ -1,0 +1,11 @@
+# compiled binaries
+mp3tag
+*.o
+a.out
+
+# Python virtual environment
+venv/
+
+# # audio files and temp copies
+# *.mp3
+# *.tmp
